@@ -17,7 +17,7 @@ CCamera::~CCamera(void)
 {
 }
 
-D3D11_VIEWPORT& CCamera::CreateViewport(int nSlot, float minZ, float maxZ, 
+void CCamera::CreateViewport(int nSlot, float minZ, float maxZ, 
 	float fClientHeight, float fClientWidth, float fTopLeftX, float fTopLeftY)
 {
 	D3D11_VIEWPORT d3dViewport;
@@ -48,8 +48,6 @@ D3D11_VIEWPORT& CCamera::CreateViewport(int nSlot, float minZ, float maxZ,
 	{
 		m_pd3dViewports[nSlot] = d3dViewport;
 	}
-
-	return d3dViewport;
 }
 
 void CCamera::SetViewports(ID3D11DeviceContext* pd3dDeviceContext)

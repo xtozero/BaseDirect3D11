@@ -24,7 +24,7 @@ public:
 	CCamera(void);
 	~CCamera(void);
 
-	D3D11_VIEWPORT& CreateViewport(int nSlot, float minZ, float maxZ, 
+	void CreateViewport(int nSlot, float minZ, float maxZ, 
 		float fClientHeight, float fClientWidth, float fTopLeftX = 0.0f, float fTopLeftY = 0.0f);
 	void SetViewports(ID3D11DeviceContext* pd3dDeviceContext);
 	

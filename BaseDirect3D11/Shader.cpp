@@ -117,3 +117,31 @@ bool CTextureShader::CreateShader(ID3D11Device* pd3dDevice)
 
 	return true;
 }
+
+bool CSSDecalShader::CreateShader(ID3D11Device* pd3dDevice)
+{
+	D3D11_INPUT_ELEMENT_DESC d3dinputElement[] = {
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	};
+
+	if ( CreateVertexShaderFromFile(pd3dDevice, L".\\SSDecalShader.fx", "VSTexture", "vs_5_0", d3dinputElement, sizeof(d3dinputElement) / sizeof(D3D11_INPUT_ELEMENT_DESC)) )
+	{
+		//Do Nothing
+	}
+	else
+	{
+		return false;
+	}
+	if ( CreatePixelShaderFromFile(pd3dDevice, L".\\SSDecalShader.fx", "PSTexture", "ps_5_0") )
+	{
+		//Do Nothing
+	}
+	else
+	{
+		return false;
+	}
+
+	return true;
+}

@@ -23,6 +23,7 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="TextureShader.fx" />
+    <None Include="SSDecalShader.fx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

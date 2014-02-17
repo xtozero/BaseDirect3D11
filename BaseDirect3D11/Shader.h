@@ -30,3 +30,9 @@ class CTextureShader : public CShader
 public:
 	virtual bool CreateShader(ID3D11Device* pd3dDevice);
 };
+
+class CSSDecalShader : public CShader
+{
+public:
+	virtual bool CreateShader(ID3D11Device* pd3dDevice);
+};

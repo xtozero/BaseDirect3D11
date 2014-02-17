@@ -288,7 +288,7 @@ bool CDirect3D11::BuildScene()
 
 	Object.SetMesh(pMesh);
 
-	pDepthBufferPlane = new CPlaneMesh(m_pd3dDevice, D3DXVECTOR2(0.4, 0.3));
+	pDepthBufferPlane = new CPlaneMesh(m_pd3dDevice, D3DXVECTOR2(0.4f, 0.3f));
 
 	pDepthBufferPlane->SetTexture( 
 		std::shared_ptr<CTexture>(new CTexture(m_pd3dDSResouceView)) );
@@ -298,7 +298,7 @@ bool CDirect3D11::BuildScene()
 
 	DepthBufferObject.SetMesh(pDepthBufferPlane);
 
-	DepthBufferObject.SetPosition(1.25, 0.9, 0.0);
+	DepthBufferObject.SetPosition(1.25f, 0.9f, 0.0f);
 
 	pWorldConstantBuffer = new CConstantBuffer<D3DXMATRIX>();
 
