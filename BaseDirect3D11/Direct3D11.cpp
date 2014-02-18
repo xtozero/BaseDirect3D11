@@ -277,7 +277,7 @@ bool CDirect3D11::BuildScene()
 
 	pCamera->UpdateProjMatrix(m_pd3dDeviceContext);
 
-	pMesh = new CCubeMesh(m_pd3dDevice, 0.5f, 0.5f, 0.5f, 
+	pMesh = new CCubeMesh(m_pd3dDevice, 2.0f, 2.0f, 2.0f, 
 		D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
 
 	pMesh->SetTexture(CTextureManager::GetInstance()->CreateTextrue(
@@ -287,6 +287,8 @@ bool CDirect3D11::BuildScene()
 		m_pd3dDevice, new CSampler()));
 
 	Object.SetMesh(pMesh);
+
+	Object.SetPosition(0.0f, 0.0f, 0.0f);
 
 	pDepthBufferPlane = new CPlaneMesh(m_pd3dDevice, D3DXVECTOR2(0.4f, 0.3f));
 
@@ -299,6 +301,19 @@ bool CDirect3D11::BuildScene()
 	DepthBufferObject.SetMesh(pDepthBufferPlane);
 
 	DepthBufferObject.SetPosition(1.25f, 0.9f, 0.0f);
+
+	pSSDecalMesh = new CCubeMesh(m_pd3dDevice, 1.0f, 1.0f, 1.0f,
+		D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+
+	pSSDecalMesh->SetTexture(CTextureManager::GetInstance()->CreateTextrue(
+		m_pd3dDevice, L".\\UV_mapper.png"));
+
+	pSSDecalMesh->SetSampler(CTextureManager::GetInstance()->CreateSampler(
+		m_pd3dDevice, new CSampler()));
+
+	SSDecalObject.SetMesh(pSSDecalMesh);
+
+	SSDecalObject.SetPosition(0.0f, 0.0f, -1.0f);
 
 	pWorldConstantBuffer = new CConstantBuffer<D3DXMATRIX>();
 
@@ -317,18 +332,30 @@ bool CDirect3D11::BuildScene()
 	if ( pShader->CreateShader(m_pd3dDevice) )
 	{
 		//Do Nothing
-		return true;
 	}
 	else
 	{
 		MessageBox(m_hWnd, L"셰이더 생성 실패", L"실패", MB_OK);
 		return false;
 	}
+
+	pSSDecalShader = new CSSDecalShader();
+
+	if ( pSSDecalShader->CreateShader(m_pd3dDevice) )
+	{
+		//Do Nothing
+	}
+	else
+	{
+		MessageBox(m_hWnd, L"데칼 셰이더 생성 실패", L"실패", MB_OK);
+		return false;
+	}
+	return true;
 }
 
 void CDirect3D11::DestroyScene()
 {
-	if( pMesh )
+	if ( pMesh )
 	{
 		pMesh->ReleaseRef();
 
@@ -337,13 +364,22 @@ void CDirect3D11::DestroyScene()
 		pMesh = NULL;
 	}
 
-	if( pDepthBufferPlane )
+	if ( pDepthBufferPlane )
 	{
 		pDepthBufferPlane->ReleaseRef();
 
 		delete pDepthBufferPlane;
 
 		pDepthBufferPlane = NULL;
+	}
+
+	if ( pSSDecalMesh )
+	{
+		pSSDecalMesh->ReleaseRef();
+
+		delete pSSDecalMesh;
+
+		pSSDecalMesh = NULL;
 	}
 
 	if ( pShader )
@@ -353,6 +389,15 @@ void CDirect3D11::DestroyScene()
 		delete pShader;
 
 		pShader = NULL;
+	}
+
+	if ( pSSDecalShader )
+	{
+		pSSDecalShader->OnDestory();
+
+		delete pSSDecalShader;
+
+		pSSDecalShader = NULL;
 	}
 
 	if ( pCamera )
@@ -380,7 +425,7 @@ void CDirect3D11::RenderScene()
 
 	pCamera->UpdateViewMatrix(m_pd3dDeviceContext);
 
-	Object.Animate(0.000026f);
+	Object.Animate(0.0000026f);
 
 	pWorldConstantBuffer->Update(m_pd3dDeviceContext, Object.GetWorldMatrix(), 0);
 	Object.Render(m_pd3dDeviceContext);
@@ -388,7 +433,19 @@ void CDirect3D11::RenderScene()
 	m_pd3dDeviceContext->OMSetRenderTargets(1, &m_pd3dRenderTargetView,NULL);
 	pWorldConstantBuffer->Update(m_pd3dDeviceContext, DepthBufferObject.GetWorldMatrix(), 0);
 	DepthBufferObject.Render(m_pd3dDeviceContext);
+	
+	m_pd3dDeviceContext->PSSetShaderResources(1, 1, &m_pd3dDSResouceView);
+	pSSDecalShader->SetShader(m_pd3dDeviceContext);
+	
+	pWorldConstantBuffer->Update(m_pd3dDeviceContext, SSDecalObject.GetWorldMatrix(), 0);
+	SSDecalObject.Render(m_pd3dDeviceContext);
+
+	ID3D11ShaderResourceView* pInit[1] = {NULL};
+	m_pd3dDeviceContext->PSSetShaderResources(1, 1, pInit);
+
 	m_pd3dDeviceContext->OMSetRenderTargets(1, &m_pd3dRenderTargetView, m_pd3dDepthStencilView);
+
+
 }
 
 void CDirect3D11::FrameAdvance()

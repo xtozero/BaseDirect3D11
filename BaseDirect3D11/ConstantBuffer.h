@@ -79,6 +79,7 @@ public:
 		pd3dDeviceContext->Unmap(m_pd3dConstantBuffer, 0);
 
 		pd3dDeviceContext->VSSetConstantBuffers(slot, 1, &m_pd3dConstantBuffer);
+		pd3dDeviceContext->PSSetConstantBuffers(slot, 1, &m_pd3dConstantBuffer);
 	}
 };
 

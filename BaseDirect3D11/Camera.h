@@ -2,6 +2,12 @@
 #include <D3D11.h>
 #include <D3DX10math.h>
 
+struct ProjConstantBuffer
+{
+	D3DXMATRIX m_d3dxmtProj;
+	D3DXMATRIX m_d3dxmtInvProj;
+};
+
 class CCamera
 {
 private:

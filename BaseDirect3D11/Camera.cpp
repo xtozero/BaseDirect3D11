@@ -4,7 +4,7 @@
 
 CCamera::CCamera(void) : m_d3dxvRight(1.0f, 0.0f, 0.0f),
 	m_d3dxvUp(0.0f, 1.0f, 0.0f), m_d3dxvLook(0.0f, 0.0f, 1.0f),
-	m_d3dxvPosition(0.0f, 0.0f, -2.0f), m_d3dxvLookAtWorld(0.0f, 0.0f, 0.0f),
+	m_d3dxvPosition(0.0f, 0.0f, -4.0f), m_d3dxvLookAtWorld(0.0f, 0.0f, 0.0f),
 	m_pd3dViewMatrixBuffer(NULL), m_pd3dProjMatrixBuffer(NULL),
 	m_pd3dViewports(NULL), m_nViewports(0)
 {
@@ -132,6 +132,8 @@ void CCamera::CreateViewAndProjBuffers(ID3D11Device* pd3dDevice)
 
 	pd3dDevice->CreateBuffer(&d3d11BufferDesc, NULL, &m_pd3dViewMatrixBuffer);
 
+	d3d11BufferDesc.ByteWidth = sizeof(ProjConstantBuffer);
+
 	pd3dDevice->CreateBuffer(&d3d11BufferDesc, NULL, &m_pd3dProjMatrixBuffer);
 }
 
@@ -152,10 +154,16 @@ void CCamera::UpdateViewMatrix(ID3D11DeviceContext* pd3dDeviceContext)
 	pd3dDeviceContext->Unmap(m_pd3dViewMatrixBuffer, 0);
 
 	pd3dDeviceContext->VSSetConstantBuffers(1, 1, &m_pd3dViewMatrixBuffer);
+	pd3dDeviceContext->PSSetConstantBuffers(1, 1, &m_pd3dViewMatrixBuffer);
 }
 
 void CCamera::UpdateProjMatrix(ID3D11DeviceContext* pd3dDeviceContext)
 {
+	ProjConstantBuffer data;
+	D3DXMatrixTranspose(&data.m_d3dxmtProj, &m_d3dxmtxProj);
+	D3DXMatrixInverse(&data.m_d3dxmtInvProj, NULL, &m_d3dxmtxProj);
+	D3DXMatrixTranspose(&data.m_d3dxmtInvProj, &data.m_d3dxmtInvProj);
+
 	D3D11_MAPPED_SUBRESOURCE d3dMappedResource;
 
 	pd3dDeviceContext->Map(
@@ -165,10 +173,12 @@ void CCamera::UpdateProjMatrix(ID3D11DeviceContext* pd3dDeviceContext)
 		0,
 		&d3dMappedResource);
 
-	D3DXMATRIX* pMatrix = (D3DXMATRIX*)d3dMappedResource.pData;
-	D3DXMatrixTranspose(pMatrix, &m_d3dxmtxProj);
+	ProjConstantBuffer* pConstant = (ProjConstantBuffer*)d3dMappedResource.pData;
+	
+	memcpy_s(pConstant, sizeof(ProjConstantBuffer), &data, sizeof(ProjConstantBuffer));
 
 	pd3dDeviceContext->Unmap(m_pd3dProjMatrixBuffer, 0);
 
 	pd3dDeviceContext->VSSetConstantBuffers(2, 1, &m_pd3dProjMatrixBuffer);
+	pd3dDeviceContext->PSSetConstantBuffers(2, 1, &m_pd3dProjMatrixBuffer);
 }

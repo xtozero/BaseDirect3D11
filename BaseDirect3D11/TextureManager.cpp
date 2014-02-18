@@ -75,7 +75,7 @@ std::shared_ptr<CSampler> CTextureManager::CreateSampler(ID3D11Device* pd3dDevic
 	}
 	else
 	{
-		std::shared_ptr<CSampler>(pSampler);
+		delete pSampler;
 		return iter->second;
 	}
 }

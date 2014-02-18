@@ -31,9 +31,12 @@ private:
 
 	CMesh* pMesh;
 	CMesh* pDepthBufferPlane;
+	CMesh* pSSDecalMesh;
 	CGameObject Object;
 	CGameObject DepthBufferObject;
+	CGameObject SSDecalObject;
 	CShader* pShader;
+	CShader* pSSDecalShader;
 	CCamera* pCamera;
 	CConstantBuffer<D3DXMATRIX>* pWorldConstantBuffer;
 
@@ -45,6 +48,7 @@ public:
 	bool CreateDeviceAndSwapChain();
 	bool CreateRenderTargetView();
 	bool CreateDepthStencilBufferAndView(bool bCreateShaderResouce = false);
+	
 	bool StartUp();
 
 	void OnDestroy();

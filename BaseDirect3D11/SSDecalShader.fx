@@ -15,11 +15,6 @@ cbuffer cbProjMatrix : register(b2)
 	//float gFarPlane : packoffset(c8.x);
 };
 
-cbuffer cbInvViewMatrix : register(b3)
-{
-	matrix gInvViewMatrix;
-};
-
 Texture2D gtxtDiffuse : register(t0);
 Texture2D gtxtDepth : register(t1);
 
@@ -38,17 +33,22 @@ struct PS_SSDECAL_INPUT
 	float4 color : COLOR;
 	float2 texcoord : TEXCOORD;
 	float3 viewLay : POSITION;
+	float4 clipPosition : POSITION1;
 };
-
-float3 GetCameraLook()
-{
-	return normalize( float3(gInvViewMatrix[0][2], gInvViewMatrix[1][2], gInvViewMatrix[2][2]) );
-}
 
 float3 GetCameraPos()
 {
-	return float3( gInvViewMatrix[0][3], gInvViewMatrix[1][3], gInvViewMatrix[2][3] );
+	return float3( -gViewMatrix[3][0], -gViewMatrix[3][1], -gViewMatrix[3][2] );
 }
+
+float4x4 GetInvViewMatrix()
+{
+	return float4x4(float4(gViewMatrix[0][0], gViewMatrix[0][1], gViewMatrix[0][2],0),
+					float4(gViewMatrix[1][0], gViewMatrix[1][1], gViewMatrix[1][2],0),
+					float4(gViewMatrix[2][0], gViewMatrix[2][1], gViewMatrix[2][2],0),
+					float4(-gViewMatrix[0][3], -gViewMatrix[1][3], -gViewMatrix[2][3],1));
+}
+
 
 float4 LinearDepthToWorldPos(float depth, float3 viewLay)
 {
@@ -56,9 +56,9 @@ float4 LinearDepthToWorldPos(float depth, float3 viewLay)
 
 	fLookDistance = dot(float3(0.0f, 0.0f ,1.0f), viewLay);
 
-	float3 worldPos = depth / fLookDistance * viewLay;
+	float3 worldPos = depth * viewLay / fLookDistance;
 
-	worldPos = mul(worldPos, (float3x3)gInvViewMatrix);
+	worldPos = mul(worldPos, (float3x3)GetInvViewMatrix());
 	worldPos += GetCameraPos();
 
 	return float4( worldPos, 1.0f );
@@ -67,24 +67,23 @@ float4 LinearDepthToWorldPos(float depth, float3 viewLay)
 //depth most be Proj.z / Proj.w
 float ConvertToViewZ(float depth)
 {
-	float viewZ = gProjMatrix[2][3];
+	float viewZ = gProjMatrix[3][2];
 	viewZ /= depth - gProjMatrix[2][2];
 	return viewZ;
 }
 
 float4x4 GetInvWorldMatrix()
 {
-	return float4x4(float4(gWorldMatrix[0][0], gWorldMatrix[0][1], gWorldMatrix[0][2],0),
-					float4(gWorldMatrix[1][0], gWorldMatrix[1][1], gWorldMatrix[1][2],0),
-					float4(gWorldMatrix[2][0], gWorldMatrix[2][1], gWorldMatrix[2][2],0),
-					float4(-gWorldMatrix[0][3], -gWorldMatrix[1][3], -gWorldMatrix[2][3],1));
+	return float4x4(float4(gWorldMatrix[0][0], gWorldMatrix[1][0], gWorldMatrix[2][0], 0),
+					float4(gWorldMatrix[0][1], gWorldMatrix[1][1], gWorldMatrix[2][1], 0),
+					float4(gWorldMatrix[0][2], gWorldMatrix[1][2], gWorldMatrix[2][2], 0),
+					float4(-gWorldMatrix[3][0], -gWorldMatrix[3][1], -gWorldMatrix[3][2], 1));
 }
 
 float2 ProjToScreen(float4 projPos)
 {
-	float2 screenPos = float2(projPos.x / projPos.w, projPos.y / projPos.w);
-	screenPos.x = screenPos.x * 0.5f + 0.5f;
-	screenPos.y = -screenPos.y * 0.5f + 0.5f;
+	float2 screenPos = projPos.xy / projPos.w;
+	screenPos = screenPos * float2(0.5f, -0.5f) + float2(0.5f, 0.5f);
 
 	return screenPos;
 }
@@ -101,13 +100,14 @@ PS_SSDECAL_INPUT VSSSDecal(VS_SSDECAL_INPUT input)
 
 	output.color = input.color;
 	output.texcoord = input.texcoord;
-	
+	output.clipPosition = output.position;
+
 	return output;
 }
 
 float4 PSSSDecal(PS_SSDECAL_INPUT input) : SV_Target
 {
-	float4 depth = gtxtDepth.Sample(gSamplerState, ProjToScreen(input.position));
+	float4 depth = gtxtDepth.Sample(gSamplerState, ProjToScreen(input.clipPosition));
 	float4 pixelWorldPos = LinearDepthToWorldPos(ConvertToViewZ(depth.x), input.viewLay);
 	pixelWorldPos = mul(pixelWorldPos, GetInvWorldMatrix());
 
